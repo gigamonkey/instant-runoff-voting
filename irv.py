@@ -5,7 +5,8 @@ import random
 import re
 import sys
 
-disqualified = {"", "Lunar Lander"}
+# Add the names of any projects you want to remove from the running here.
+disqualified = ["Lunar Lander"]
 
 pat = re.compile(r"^(.*?) - (.*?)$")
 
@@ -36,10 +37,6 @@ def parse_ballot(raw_ballot):
     return ballot
 
 
-def by_category(category, ballots):
-    return [b[category] for b in ballots]
-
-
 def current_score(category_votes):
     all_candidate = {c for v in category_votes for c in v.values()}
 
@@ -66,18 +63,6 @@ def winners(score, total_votes):
     return r
 
 
-def updated_ballots(votes, eliminated):
-    return [renumber(eliminate(v, eliminated)) for v in votes]
-
-
-def eliminate(v, eliminated):
-    return {k: v for k, v in v.items() if v not in eliminated}
-
-
-def renumber(v):
-    return {i + 1: t[1] for i, t in enumerate(sorted(v.items()))}
-
-
 def show_votes(votes):
     print("\nAdjusted ballots:")
     for v in votes:
@@ -100,9 +85,25 @@ def category_results(votes, n):
         return w
     else:
         least_votes = bottom(s)
+        # There are various choices what to do when there is a tie at the
+        # bottom. We take an easy one and pick one at random to eliminate. But
+        # updated_ballots takes a set in case we wanted to do something else
+        # more efficient.
         to_eliminate = {random.choice(list(least_votes))}
         print(f"\nEliminated: {to_eliminate}")
         return category_results(updated_ballots(votes, to_eliminate), n + 1)
+
+
+def updated_ballots(votes, eliminated):
+    return [renumber(eliminate(v, eliminated)) for v in votes]
+
+
+def eliminate(v, eliminated):
+    return {k: v for k, v in v.items() if v not in eliminated}
+
+
+def renumber(v):
+    return {i + 1: t[1] for i, t in enumerate(sorted(v.items()))}
 
 
 def categories(ballots):
@@ -110,8 +111,8 @@ def categories(ballots):
 
 
 def tally_category(c, ballots):
-    votes = by_category(c, ballots)
-    votes = updated_ballots(votes, disqualified)
+    for_category = [b[c] for b in ballots]
+    votes = updated_ballots(for_category, {""} | set(disqualified))
     return category_results(votes, 1)
 
 
