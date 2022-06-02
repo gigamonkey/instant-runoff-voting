@@ -4,9 +4,10 @@ import csv
 import random
 import re
 import sys
+from collections import defaultdict
 
 # Add the names of any projects you want to remove from the running here.
-disqualified = ["Lunar Lander"]
+disqualified = []
 
 pat = re.compile(r"^(.*?) - (.*?)$")
 
@@ -24,16 +25,12 @@ def load_data(filename):
 
 
 def parse_ballot(raw_ballot):
-    ballot = {}
-    for k, v in raw_ballot.items():
-        if m := pat.match(k):
+    ballot = defaultdict(dict)
+    for column, project in raw_ballot.items():
+        if m := pat.match(column):
             category = m.group(1)
             pref = m.group(2)
-            project = v
-            if category not in ballot:
-                ballot[category] = {prefs[pref]: project}
-            else:
-                ballot[category][prefs[pref]] = project
+            ballot[category][prefs[pref]] = project
     return ballot
 
 
